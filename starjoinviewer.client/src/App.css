@@ -1,11 +1,203 @@
-﻿#root {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
+﻿.App{
     text-align: center;
+    background-color: #282c34;
+    color: white;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-th, td {
-    padding-left: 1rem;
-    padding-right: 1rem;
+form{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-size: 4rem;
 }
+input{
+    padding: 10px;
+    font-size: 2rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #ccc;
+    padding: 1rem;
+    font-size: 1.2rem;
+    width: 90%;
+}
+
+button{
+    padding: 10px 20px;
+    font-size: 2rem;
+    background-color: #61dafb;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: bold;
+}
+
+button:hover{
+    background-color: #21a1f1;
+}
+
+input:focus{
+    outline: 4px solid #21a1f1;
+}
+
+.error{
+    color: red;
+    font-size: 1.5rem;
+    margin-top: 20px;
+}
+
+.container{
+    min-width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.top-left, .top-right, .bottom-left, .bottom-right {
+    border: 2px solid black;
+    padding: 20px;
+    width: 70%;
+    overflow-y: auto;
+    max-height: 50vh;
+  }
+  
+  .top-left, .bottom-left {
+    width: 30%;
+  }
+
+  .top-left, .top-right {
+    min-height: 50vh;
+  }
+  
+  .bottom-left, .bottom-right {
+    min-height: 50vh;
+  }
+
+  .title{
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #61dafb;
+  }
+
+  .factTables{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    width: 100%;
+    padding: 2px;
+
+    
+  }
+
+  .factTableContainer{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: auto;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .factTable{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 10px;
+    border-radius: 5px;
+    width: fit-content;
+  }
+
+  .tableName{
+    width: fit-content;
+    font-size: 1.2rem;
+    text-align: left;
+  }
+
+  .sqlTableName{
+    width: fit-content;
+    text-align: left;
+    color: #c7c7c7;
+    font-size: 0.8rem;
+  }
+
+  .selectedFactTable .factTable{
+    background-color: #2a6170;
+  }
+
+  .selectedFactTable .tableIcon{
+    color: #61dafb;
+  }
+
+  .factTable:hover{
+    background-color: #378296;
+    cursor: pointer;
+  }
+
+  .clickableIcon{
+    color: white;
+    background-color: #61dafb;
+    border-radius: 5px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-right: 5px;
+  }
+
+  .dimTables{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    margin-top: 20px;
+    width: 80%;
+    padding: 2px;
+    padding-left: 20px;
+    border-left: 2px solid #61dafb;
+  }
+
+  .dimTableContainer{
+    display: flex;
+    flex-direction: column;
+    padding: auto;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .minorIcon{
+    color: white;
+    background-color: transparent;
+    font-size: 1.2rem;
+    margin-right: 5px;
+  }
+
+  .dimTableAtrs{
+    display: flex;
+    text-align: left;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 20px;
+    width: fit-content;
+    border-left: 2px solid #61dafb;
+    color: #c7c7c7;
+    font-size: 0.8rem;
+    margin-left: 8px;
+  }
+
+  .dimTableAtr{
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    width: fit-content;
+    align-items: center;
+    color: #c7c7c7;
+    font-size: 0.8rem;
+  }

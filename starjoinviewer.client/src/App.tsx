@@ -1,55 +1,231 @@
 import { useEffect, useState } from 'react';
-import './App.css';
+import'./App.css';
 
-interface Forecast {
-    date: string;
-    temperatureC: number;
-    temperatureF: number;
-    summary: string;
-}
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7029';
 
+type TableValue = {
+    nazivTablice: string;
+    sqlNazivTablice: string;
+  };
+  
+  type Tables = {
+    [key: string]: TableValue;
+  };
+
+  type DimTablesForFTable = {
+    [key: string]: Tables[];
+  };
+
+  type DimTableAtr={
+    punNazivAtributa: string;
+    nazivAtributa: string;
+    sqlNazivAtributa: string;
+    funkcija: string;
+  }
+  type DimTableAtrs={
+    [key: string]: DimTableAtr[];
+  }
+
+  
 function App() {
-    const [forecasts, setForecasts] = useState<Forecast[]>();
+    const [isConnected, setIsConnected] = useState<boolean>(false);
+    const [connectionString, setConnectionString] = useState<string>('');
+    const [error, setError] = useState<string>('');
 
+    const [hasFetched, setHasFetched] = useState<boolean>(false);
+    
+    const [factTables, setFactTables] = useState<Tables>({});
+    const [dimTables, setDimTables] = useState<Tables>({});
+
+    const [selectedTable, setSelectedTable] = useState<string>('');
+
+    const [factTableDims, setFactTableDims] = useState<DimTablesForFTable>({});
+    const [dimTableAtrs, setDimTableAtrs] = useState<DimTableAtrs>({});
+
+    const [showDimsForFTable, setShowDimsForFTable] = useState<any>({});
+    
+
+    const [showDimTables, setShowDimTables] = useState<boolean>(false);
+    const handleTableClick = (tableName: string) => {
+        console.log(dimTableAtrs);
+        setSelectedTable(tableName);
+        if (!showDimsForFTable[tableName]) {
+            setShowDimsForFTable((prevState: any) => ({ ...prevState, [tableName]: {} } as any));
+        }
+        if (!factTableDims[tableName]) {
+            fetch(API_URL + '/getftabledims?connectionString=' + connectionString + '&sifTablica=' + tableName, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(res => res.json())
+                .then((data: Tables[]) => {
+                    setFactTableDims(prevState => ({
+                        ...prevState,
+                        [tableName]: data,
+                    }));
+                })
+                .catch(err => {
+                    console.error("Greška pri dohvaćanju dimenzijskih tablica:", err);
+                });
+        }
+    };
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const response = await fetch(API_URL + '/connect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ connectionString }),
+        });
+        if (response.ok) {
+            setIsConnected(true);
+            setError('');
+        }
+        else {
+            setError('Failed to connect to the database');
+        }
+    }
     useEffect(() => {
-        populateWeatherData();
-    }, []);
+        if (!isConnected || hasFetched) return;
+        const fetchAll = async () => {
+            try {
+                const factRes = await fetch(`${API_URL}/getfacttables?connectionString=${connectionString}`);
+                const factData: Tables = await factRes.json();
+                setFactTables(factData);
+          
+                const dimRes = await fetch(`${API_URL}/getdimtables?connectionString=${connectionString}`);
+                const dimData: Tables = await dimRes.json();
+                setDimTables(dimData);
+        
+                const dimKeys = Object.keys(dimData);
+          
+                const attrFetches = dimKeys.map(sifTablica =>
+                  fetch(`${API_URL}/getdimtableatrs?connectionString=${connectionString}&sifTablica=${sifTablica}`)
+                    .then(res => res.json())
+                    .then(attrs => ({ [sifTablica]: attrs }))
+                );
+          
+                const attributesArray = await Promise.all(attrFetches);
+          
+                const attributesObj = Object.assign({}, ...attributesArray);
+          
+                setDimTableAtrs(attributesObj);
+          
+                setHasFetched(true);
+                if (!isConnected) {
+                  setIsConnected(true);
+                }
+              } catch (err) {
+                console.error("Greška pri dohvaćanju tablica ili atributa:", err);
+              }
+            ;
+        }
+        fetchAll();
 
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tableLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
+    },[isConnected, hasFetched]);
 
-    return (
-        <div>
-            <h1 id="tableLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
-        </div>
-    );
+    if (isConnected) {
+        return (
+            <div className="App">
+                <div className='container'>
+                    <div className='top-left'>
 
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
-        const data = await response.json();
-        setForecasts(data);
+                        <div className='title'>Činjenične tablice</div>
+                        <div className='factTables'>
+                            {Object.keys(factTables).map((key) => (
+                                <div className={selectedTable === key ? 'factTableContainer selectedFactTable' : 'factTableContainer'} key={key}>
+                                    <span className="material-symbols-outlined tableIcon">
+                                    table
+                                    </span>
+                                    <div className='factTable' onClick={() => handleTableClick(key)}>
+                                        
+                                        <div className='tableName'>{factTables[key].nazivTablice}</div>
+                                        <div className='sqlTableName'>{factTables[key].sqlNazivTablice}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className='top-right'></div>
+                    <div className='bottom-left'>
+                        <div className='title'>
+                            <span className="material-symbols-outlined clickableIcon" onClick={() => setShowDimTables(!showDimTables)}>
+                                {showDimTables ? 'expand_more' : 'chevron_right'}
+                            </span>
+                            Dimenzijske tablice
+                        </div>
+                        
+                        <div className='dimTables'>
+                            {showDimTables && selectedTable && factTableDims[selectedTable] && factTableDims[selectedTable].map((dimTable, index) => (
+                                
+                                    <div className='dimTable'>
+                                        <div className='dimTableContainer' key={index}>
+                                            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                                            <span className="material-symbols-outlined clickableIcon minorIcon"
+                                            onClick={() => {
+                                                if (!showDimsForFTable[selectedTable][Object.keys(dimTable)[0]]){
+                                                    setShowDimsForFTable((prevState: any) => ({
+                                                        ...prevState,
+                                                        [selectedTable]: {
+                                                            ...prevState[selectedTable],
+                                                            [Object.keys(dimTable)[0]]: true,
+                                                        },
+                                                    }));
+                                                }
+                                                else setShowDimsForFTable((prevState: any) => ({
+                                                    ...prevState,
+                                                    [selectedTable]: {
+                                                        ...prevState[selectedTable],
+                                                        [Object.keys(dimTable)[0]]: !prevState[selectedTable][Object.keys(dimTable)[0]],
+                                                    },
+                                                }));
+                                            }}>
+                                                {showDimsForFTable[selectedTable][Object.keys(dimTable)[0]] ? 'expand_more' : 'chevron_right'}
+                                            </span>
+                                            <div>
+                                            <div className='tableName'>{dimTable[Object.keys(dimTable)[0]].nazivTablice}</div>
+                                            <div className='sqlTableName'>{dimTable[Object.keys(dimTable)[0]].sqlNazivTablice}</div>
+                                            </div>
+                                            </div>
+                                            <div className='dimTableAtrs'>
+                                                {showDimsForFTable[selectedTable] && showDimsForFTable[selectedTable][Object.keys(dimTable)[0]] && dimTableAtrs[Object.keys(dimTable)[0]].map((atr: DimTableAtr, index: number) => (
+                                                    <div className='dimTableAtr' key={index}>
+                                                        <span className="material-symbols-outlined tableIcon">
+                                                        check_box_outline_blank
+                                                        </span>
+                                                        <div className='dimTableAtrName'>{atr.punNazivAtributa}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className='bottom-right'></div>
+                </div>
+            </div>
+        );
+    }
+    else {
+        return (
+            <div className="App">
+                <form onSubmit={handleSubmit}>
+                    <label>DB connection string</label>
+                    <input
+                        type="text"
+                        placeholder='enter connection string...'
+                        value={connectionString}
+                        onChange={(e) => setConnectionString(e.target.value)}
+                    />
+                    <button type="submit">Connect</button>
+                    {error && <p className="error">{error}</p>}
+                </form>
+            </div>
+        );
     }
 }
 
