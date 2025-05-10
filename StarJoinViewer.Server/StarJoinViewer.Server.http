@@ -1,0 +1,6 @@
+@StarJoinViewer.Server_HostAddress = http://localhost:5186
+
+GET {{StarJoinViewer.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
