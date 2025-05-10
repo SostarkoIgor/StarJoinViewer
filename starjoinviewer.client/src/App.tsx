@@ -26,6 +26,15 @@ type TableValue = {
     [key: string]: DimTableAtr[];
   }
 
+  type Measure = {
+    nazivMjere: string;
+    sqlNazivMjere: string;
+  };
+
+    type Measures = {
+        [key: string]: Measure;
+    };
+
   
 function App() {
     const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -41,10 +50,11 @@ function App() {
 
     const [factTableDims, setFactTableDims] = useState<DimTablesForFTable>({});
     const [dimTableAtrs, setDimTableAtrs] = useState<DimTableAtrs>({});
+    const [fTableMeasures, setFTableMeasures] = useState<Measures>({});
 
     const [showDimsForFTable, setShowDimsForFTable] = useState<any>({});
     
-
+    const [showMeasures, setShowMeasures] = useState<boolean>(false);
     const [showDimTables, setShowDimTables] = useState<boolean>(false);
     const handleTableClick = (tableName: string) => {
         console.log(dimTableAtrs);
@@ -107,6 +117,16 @@ function App() {
                     .then(res => res.json())
                     .then(attrs => ({ [sifTablica]: attrs }))
                 );
+
+                const measuresFetches = Object.keys(factData).map(sifTablica =>
+                  fetch(`${API_URL}/getfmeasures?connectionString=${connectionString}&sifTablica=${sifTablica}`)
+                    .then(res => res.json())
+                    .then(measures => ({ [sifTablica]: measures }))
+                );
+
+                const measuresArray = await Promise.all(measuresFetches);
+                const measuresObj = Object.assign({}, ...measuresArray);
+                setFTableMeasures(measuresObj);
           
                 const attributesArray = await Promise.all(attrFetches);
           
@@ -155,7 +175,7 @@ function App() {
                             <span className="material-symbols-outlined clickableIcon" onClick={() => setShowDimTables(!showDimTables)}>
                                 {showDimTables ? 'expand_more' : 'chevron_right'}
                             </span>
-                            Dimenzijske tablice
+                            Dimenzije
                         </div>
                         
                         <div className='dimTables'>
@@ -201,6 +221,23 @@ function App() {
                                                 ))}
                                             </div>
                                     </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className='title'>
+                            <span className="material-symbols-outlined clickableIcon" onClick={() => setShowMeasures(!showMeasures)}>
+                                {showMeasures ? 'expand_more' : 'chevron_right'}
+                            </span>
+                            Mjere
+                        </div>
+                        <div className='measures'>
+                            {showMeasures && selectedTable && fTableMeasures[selectedTable] && Object.keys(fTableMeasures[selectedTable]).map((key) => (
+                                <div className='measure' key={key}>
+                                    <span className="material-symbols-outlined tableIcon">
+                                        check_box_outline_blank
+                                    </span>
+                                    <div className='measureName'>{fTableMeasures[selectedTable][key].nazivMjere}</div>
                                 </div>
                             ))}
                         </div>

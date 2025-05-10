@@ -24,6 +24,12 @@ namespace StarJoinViewer.Server.Controllers
             public string Funkcija { get; set; } = string.Empty;
         }
 
+        public class Mjera
+        {
+            public string NazivMjere { get; set; } = string.Empty;
+            public string SQLNazivMjere { get; set; } = string.Empty;
+        }
+
         [HttpPost("connect")]
         public async Task<IActionResult> Connect([FromBody] ConnectionRequest request)
         {
@@ -146,6 +152,35 @@ namespace StarJoinViewer.Server.Controllers
                     row.Funkcija = reader.GetString(1);
                     row.SQLNazivAtributa = reader.GetString(2);
                     row.NazivAtributa = reader.GetString(3);
+                    data.Add(row);
+                }
+
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Error retrieving dim table attributes: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("getfmeasures")]
+        public async Task<IActionResult> GetFMeasures([FromQuery] string connectionString, [FromQuery] int sifTablica)
+        {
+            try
+            {
+                using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                var command = new SqlCommand($"select imeAtrib, imeSQLAtrib from tabAtribut where sifTipAtrib=1 and sifTablica={sifTablica}", connection);
+                var reader = await command.ExecuteReaderAsync();
+
+
+                var data = new List<Mjera>();
+                while (await reader.ReadAsync())
+                {
+                    var row = new Mjera();
+                    row.NazivMjere = reader.GetString(0);
+                    row.SQLNazivMjere = reader.GetString(1);
                     data.Add(row);
                 }
 

@@ -61,8 +61,8 @@ input:focus{
 }
 
 .top-left, .top-right, .bottom-left, .bottom-right {
-    border: 2px solid black;
-    padding: 20px;
+    
+    padding: 10px;
     width: 70%;
     overflow-y: auto;
     max-height: 50vh;
@@ -80,10 +80,30 @@ input:focus{
     min-height: 50vh;
   }
 
+  .top-left{
+    border-right: 1px solid #61dafb;
+    border-bottom: 1px solid #61dafb;
+  }
+  .top-right{
+    border-bottom: 1px solid #61dafb;
+  }
+  .bottom-left{
+    border-right: 1px solid #61dafb;
+  }
+  .bottom-right{
+    border-bottom: 1px solid #61dafb;
+  }
+
+
   .title{
     font-size: 2rem;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    margin-top: 10px;
     color: #61dafb;
+  }
+
+  .bottom-left .title{
+    text-align: left;
   }
 
   .factTables{
@@ -103,7 +123,7 @@ input:focus{
     flex-direction: row;
     align-items: center;
     padding: auto;
-    gap: 10px;
+    gap: 5px;
     width: 100%;
   }
 
@@ -157,9 +177,9 @@ input:focus{
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
-    margin-top: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     width: 80%;
-    padding: 2px;
     padding-left: 20px;
     border-left: 2px solid #61dafb;
   }
@@ -179,7 +199,7 @@ input:focus{
     margin-right: 5px;
   }
 
-  .dimTableAtrs{
+  .dimTableAtrs, .measures{
     display: flex;
     text-align: left;
     flex-direction: column;
@@ -192,7 +212,7 @@ input:focus{
     margin-left: 8px;
   }
 
-  .dimTableAtr{
+  .dimTableAtr, .measure{
     display: flex;
     flex-direction: row;
     gap: 5px;
