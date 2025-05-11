@@ -77,8 +77,38 @@ function App() {
     const [query, setQuery] = useState<string>('');
     const [displayQuery, setDisplayQuery] = useState<string>('');
 
+    const [queryResult, setQueryResult] = useState<any[]>([]);
+
+    const [queryError, setQueryError] = useState<string>('');
+
     const generateKey = (table: string, vrsta: string, sqlNaziv: string, naziv: string) => {
         return `${table}-${vrsta}-${sqlNaziv}-${naziv}`;
+    };
+
+    const executeQuery = async () => {
+        setQueryError('');
+        setQueryResult([]);
+        if (query) {
+            try {
+                const response = await fetch(`${API_URL}/getdatafromsql?connectionString=${connectionString}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ queryString: query }),
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setQueryResult(data);
+                } else {
+                    setQueryError('Greška pri izvršavanju upita ' + response.statusText);
+                    setQueryResult([]);
+                }
+            } catch (error) {
+                setQueryError('Greška pri izvršavanju upita ' + error);
+                setQueryResult([]);
+            }
+        }
     };
     const generateQuery =() => {
         let selectedElements_ = selectedElements;
@@ -102,7 +132,7 @@ function App() {
                     joinConditions.push(factTables[selectedTable].sqlNazivTablice.trim()+'.'+dimKeys[element.tablica].trim()+' = '+dimTables[element.tablica].sqlNazivTablice.trim()+'.'+dimKeys[element.tablica].trim());
                     
                 }
-                groupBy.push(dimTables[element.tablica].sqlNazivTablice.trim()+'.'+dimKeys[element.tablica].trim());
+                groupBy.push(dimTables[element.tablica].sqlNazivTablice.trim()+'.'+element.sqlNaziv.trim());
             
             }
         });
@@ -111,16 +141,20 @@ function App() {
             displayQuery_ += 'SELECT \n\n';
         }
         if (mjere.length== 0 && dimAtr.length === 0) {
-            query_ += factTables[selectedTable].sqlNazivTablice.trim() + '.*';
-            displayQuery_ += factTables[selectedTable].sqlNazivTablice.trim() + '.*\n';
+            query_ += 'TOP 100' + factTables[selectedTable].sqlNazivTablice.trim() + '.*';
+            displayQuery_ += 'TOP 100 ' + factTables[selectedTable].sqlNazivTablice.trim() + '.*\n';
         }
         if (mjere.length > 0) {
-            query_ += mjere.join(', ') + ', ';
-            displayQuery_ += mjere.join(',\n ') + ', \n';
+            query_ += mjere.join(', ')+ ' ';
+            displayQuery_ += mjere.join(',\n ') + '\n';
         }
         if (dimAtr.length > 0) {
-            query_ += dimAtr.join(', ') + ', ';
-            displayQuery_ += dimAtr.join(',\n ') + ', \n';
+            if (mjere.length > 0) {
+                query_ += ', ';
+                displayQuery_ += ', \n';
+            }
+            query_ += dimAtr.join(', ')+ ' ';
+            displayQuery_ += dimAtr.join(',\n ') + '\n';
         }
         if (tablesInQuery.length > 0) {
             query_ += 'FROM ' + tablesInQuery.join(', ') + ' ';
@@ -128,7 +162,7 @@ function App() {
         }
 
         if (joinConditions.length > 0) {
-            query_ += 'WHERE ' + joinConditions.join(' AND ');
+            query_ += 'WHERE ' + joinConditions.join(' AND ') + ' ';
             displayQuery_ += '\nWHERE \n\n' + joinConditions.join(' AND ') + '\n';
         }
         if (groupBy.length > 0) {
@@ -163,6 +197,7 @@ function App() {
         setQuery('');
         setDisplayQuery('');
         setSelectedElements({});
+        setQueryResult([]);
         if (!showDimsForFTable[tableName]) {
             setShowDimsForFTable((prevState: any) => ({ ...prevState, [tableName]: {} } as any));
         }
@@ -286,7 +321,7 @@ function App() {
                     </div>
                     <div className='top-right'>
                         <div className='header'>
-                            <button className='executeButton' onClick={() => {}}>
+                            <button className='executeButton' onClick={() => {executeQuery();}}>
                                 <span className="material-symbols-outlined executeIcon">
                                     play_arrow
                                 </span>
@@ -379,7 +414,32 @@ function App() {
                             ))}
                         </div>
                     </div>
-                    <div className='bottom-right'></div>
+                    <div className='bottom-right'>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th className='rowIndex'>
+                                        {queryError? <p style={{color: 'red', fontWeight: 'bold'}}>{queryError}</p>:
+                                        'Uk.'+queryResult.length}
+                                    </th>
+                                    {queryResult.length > 0 &&
+                                        Object.keys(queryResult[0]).map((key) => (
+                                        <th key={key}>{key}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {queryResult.map((row: any, rowIndex: number) => (
+                                <tr key={rowIndex}>
+                                    <td className='rowIndex'>{rowIndex + 1}</td>
+                                    {Object.values(row).map((value, colIndex) => (
+                                    <td key={colIndex}>{String(value)}</td>
+                                    ))}
+                                </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         );

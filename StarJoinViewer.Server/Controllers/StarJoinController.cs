@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using StarJoinViewer.Server.Dto;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace StarJoinViewer.Server.Controllers
@@ -10,6 +11,11 @@ namespace StarJoinViewer.Server.Controllers
     [ApiController]
     public class StarJoinController : ControllerBase
     {
+
+        public class Query
+        {
+            public string QueryString { get; set; } = string.Empty;
+        }
         public class ImenaTablica
         {
             public string NazivTablice { get; set; } = string.Empty;
@@ -218,5 +224,46 @@ namespace StarJoinViewer.Server.Controllers
                 return BadRequest(new { message = $"Error retrieving dim table keys: {ex.Message}" });
             }
         }
+
+        [HttpPost("getdatafromsql")]
+        public async Task<IActionResult> GetDataFromSql([FromBody] Query query, [FromQuery] string connectionString)
+        {
+            try
+            {
+                using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                using var command = new SqlCommand(query.QueryString, connection);
+                using var reader = await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
+
+                var result = new List<Dictionary<string, object?>>();
+
+                while (await reader.ReadAsync())
+                {
+                    var row = new Dictionary<string, object?>(reader.FieldCount);
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var columnName = reader.GetName(i);
+                        if (await reader.IsDBNullAsync(i))
+                        {
+                            row[columnName] = null;
+                        }
+                        else
+                        {
+                            row[columnName] = reader.GetValue(i); // brže nego GetFieldValue za object
+                        }
+                    }
+
+                    result.Add(row);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Greška pri izvršavanju upita: {ex.Message}" });
+            }
+        }
+
     }
 }
