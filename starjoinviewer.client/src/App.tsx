@@ -3,36 +3,45 @@ import'./App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7029';
 
-type TableValue = {
-    nazivTablice: string;
-    sqlNazivTablice: string;
-  };
-  
-  type Tables = {
-    [key: string]: TableValue;
-  };
+    type TableValue = {
+        nazivTablice: string;
+        sqlNazivTablice: string;
+    };
+    
+    type Tables = {
+        [key: string]: TableValue;
+    };
 
-  type DimTablesForFTable = {
-    [key: string]: Tables[];
-  };
-
-  type DimTableAtr={
-    punNazivAtributa: string;
-    nazivAtributa: string;
-    sqlNazivAtributa: string;
-    funkcija: string;
-  }
-  type DimTableAtrs={
-    [key: string]: DimTableAtr[];
-  }
-
-  type Measure = {
-    nazivMjere: string;
-    sqlNazivMjere: string;
-  };
+    type DimTablesForFTable = {
+        [key: string]: Tables[];
+    };
+    type DimTableAtr = {
+        nazivMjere: string;
+        sqlNazivMjere: string;
+    };
+    type Measure={
+        punNazivAtributa: string;
+        nazivAtributa: string;
+        sqlNazivAtributa: string;
+        funkcija: string;
+    }
+    type DimTableAtrs={
+        [key: string]: DimTableAtr[];
+    }
 
     type Measures = {
         [key: string]: Measure;
+    };
+
+    type SelectedElement = {
+        vrsta: string;
+        sqlNaziv: string;
+        funkcija: string;
+        tablica: string;
+    };
+
+    type SelectedElements = {
+        [key: string]: SelectedElement;
     };
 
   
@@ -52,10 +61,35 @@ function App() {
     const [dimTableAtrs, setDimTableAtrs] = useState<DimTableAtrs>({});
     const [fTableMeasures, setFTableMeasures] = useState<Measures>({});
 
+    const [selectedElements, setSelectedElements] = useState<SelectedElements>({});
+
     const [showDimsForFTable, setShowDimsForFTable] = useState<any>({});
     
     const [showMeasures, setShowMeasures] = useState<boolean>(false);
     const [showDimTables, setShowDimTables] = useState<boolean>(false);
+
+    const generateKey = (table: string, vrsta: string, sqlNaziv: string) => {
+        return `${table}-${vrsta}-${sqlNaziv}`;
+    };
+    const addToSelectedElementsOrDelete = (table: string, vrsta: string, funkcija: string, sqlNaziv: string) => {
+        if (!selectedElements[generateKey(table, vrsta, sqlNaziv)]) {
+        setSelectedElements((prevState) => ({
+            ...prevState,
+            [generateKey(table, vrsta, sqlNaziv)]: {
+                vrsta,
+                sqlNaziv,
+                funkcija,
+                tablica: table,
+            },
+        }));
+        } else {
+            setSelectedElements((prevState) => {
+                const newState = { ...prevState };
+                delete newState[generateKey(table, vrsta, sqlNaziv)];
+                return newState;
+            });
+        }
+    };
     const handleTableClick = (tableName: string) => {
         console.log(dimTableAtrs);
         setSelectedTable(tableName);
@@ -213,10 +247,10 @@ function App() {
                                             <div className='dimTableAtrs'>
                                                 {showDimsForFTable[selectedTable] && showDimsForFTable[selectedTable][Object.keys(dimTable)[0]] && dimTableAtrs[Object.keys(dimTable)[0]].map((atr: DimTableAtr, index: number) => (
                                                     <div className='dimTableAtr' key={index}>
-                                                        <span className="material-symbols-outlined tableIcon">
-                                                        check_box_outline_blank
+                                                        <span className="material-symbols-outlined tableIcon listIcon" onClick={() => {addToSelectedElementsOrDelete(Object.keys(dimTable)[0], 'dimAtr', '', atr.sqlNazivMjere)}}>
+                                                            {selectedElements[generateKey(Object.keys(dimTable)[0], 'dimAtr', atr.sqlNazivMjere)] ? 'check_box' : 'check_box_outline_blank'}
                                                         </span>
-                                                        <div className='dimTableAtrName'>{atr.punNazivAtributa}</div>
+                                                        <div className='dimTableAtrName'>{atr.nazivMjere}</div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -234,10 +268,10 @@ function App() {
                         <div className='measures'>
                             {showMeasures && selectedTable && fTableMeasures[selectedTable] && Object.keys(fTableMeasures[selectedTable]).map((key) => (
                                 <div className='measure' key={key}>
-                                    <span className="material-symbols-outlined tableIcon">
-                                        check_box_outline_blank
+                                    <span className="material-symbols-outlined tableIcon" onClick={() => {addToSelectedElementsOrDelete(selectedTable, 'mjera', fTableMeasures[selectedTable][key].funkcija, fTableMeasures[selectedTable][key].sqlNazivAtributa)}}>
+                                        {selectedElements[generateKey(selectedTable, 'mjera', fTableMeasures[selectedTable][key].sqlNazivAtributa)] ? 'check_box' : 'check_box_outline_blank'}
                                     </span>
-                                    <div className='measureName'>{fTableMeasures[selectedTable][key].nazivMjere}</div>
+                                    <div className='measureName'>{fTableMeasures[selectedTable][key].punNazivAtributa}</div>
                                 </div>
                             ))}
                         </div>

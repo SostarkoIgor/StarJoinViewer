@@ -140,18 +140,16 @@ namespace StarJoinViewer.Server.Controllers
                 using var connection = new SqlConnection(connectionString);
                 await connection.OpenAsync();
 
-                var command = new SqlCommand($"select tabAtributAgrFun.imeAtrib, nazAgrFun, imeSQLAtrib, tabAtribut.imeAtrib from tabAtributAgrFun join agrFun on tabAtributAgrFun.sifAgrFun = agrFun.sifAgrFun join tabAtribut on tabAtribut.rbrAtrib = tabAtributAgrFun.rbrAtrib where tabAtribut.sifTablica={sifTablica}", connection);
+                var command = new SqlCommand($"select imeAtrib, imeSQLAtrib from tabAtribut where sifTipAtrib=2 and sifTablica={sifTablica}", connection);
                 var reader = await command.ExecuteReaderAsync();
 
-                
-                var data = new List<Atribut>();
+
+                var data = new List<Mjera>();
                 while (await reader.ReadAsync())
                 {
-                    var row = new Atribut();
-                    row.PunNazivAtributa = reader.GetString(0);
-                    row.Funkcija = reader.GetString(1);
-                    row.SQLNazivAtributa = reader.GetString(2);
-                    row.NazivAtributa = reader.GetString(3);
+                    var row = new Mjera();
+                    row.NazivMjere = reader.GetString(0);
+                    row.SQLNazivMjere = reader.GetString(1);
                     data.Add(row);
                 }
 
@@ -171,16 +169,18 @@ namespace StarJoinViewer.Server.Controllers
                 using var connection = new SqlConnection(connectionString);
                 await connection.OpenAsync();
 
-                var command = new SqlCommand($"select imeAtrib, imeSQLAtrib from tabAtribut where sifTipAtrib=1 and sifTablica={sifTablica}", connection);
+                var command = new SqlCommand($"select tabAtributAgrFun.imeAtrib, nazAgrFun, imeSQLAtrib, tabAtribut.imeAtrib from tabAtributAgrFun join agrFun on tabAtributAgrFun.sifAgrFun = agrFun.sifAgrFun join tabAtribut on tabAtribut.rbrAtrib = tabAtributAgrFun.rbrAtrib and tabAtribut.rbrAtrib=tabAtributAgrFun.rbrAtrib and tabAtribut.sifTablica=tabAtributAgrFun.sifTablica where tabAtributAgrFun.sifTablica ={sifTablica} and sifTipAtrib=1", connection);
                 var reader = await command.ExecuteReaderAsync();
 
 
-                var data = new List<Mjera>();
+                var data = new List<Atribut>();
                 while (await reader.ReadAsync())
                 {
-                    var row = new Mjera();
-                    row.NazivMjere = reader.GetString(0);
-                    row.SQLNazivMjere = reader.GetString(1);
+                    var row = new Atribut();
+                    row.PunNazivAtributa = reader.GetString(0);
+                    row.Funkcija = reader.GetString(1);
+                    row.SQLNazivAtributa = reader.GetString(2);
+                    row.NazivAtributa = reader.GetString(3);
                     data.Add(row);
                 }
 
