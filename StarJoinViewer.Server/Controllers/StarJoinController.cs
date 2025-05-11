@@ -86,12 +86,13 @@ namespace StarJoinViewer.Server.Controllers
                 var command = new SqlCommand("SELECT sifTablica, nazTablica, nazSQLTablica FROM tablica WHERE sifTipTablica=2", connection);
                 var reader = await command.ExecuteReaderAsync();
 
-                var attributes = new Dictionary<int, string>();
+                var attributes = new Dictionary<int, ImenaTablica>();
                 while (await reader.ReadAsync())
                 {
                     int sifAtribut = reader.GetInt32(0);
                     string nazAtribut = reader.GetString(1);
-                    attributes[sifAtribut] = nazAtribut;
+                    string nazSQLAtribut = reader.GetString(2);
+                    attributes[sifAtribut] = new ImenaTablica() { SQLNazivTablice = nazSQLAtribut, NazivTablice = nazAtribut };
                 }
 
                 return Ok(attributes);
@@ -189,6 +190,32 @@ namespace StarJoinViewer.Server.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = $"Error retrieving dim table attributes: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("getdimkeys")]
+        public async Task<IActionResult> GetDimKeys([FromQuery] string connectionString)
+        {
+            try
+            {
+                using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                var command = new SqlCommand("select sifTablica, imeSQLAtrib from tabAtribut where rbrAtrib=1 and sifTipAtrib=2", connection);
+                var reader = await command.ExecuteReaderAsync();
+
+                var keys = new Dictionary<int, string>();
+                while (await reader.ReadAsync())
+                {
+                    int sifTablica = reader.GetInt32(0);
+                    keys[sifTablica] = reader.GetString(1);
+                }
+
+                return Ok(keys);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Error retrieving dim table keys: {ex.Message}" });
             }
         }
     }
